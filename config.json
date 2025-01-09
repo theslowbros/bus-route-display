@@ -1,0 +1,15 @@
+{
+    "clientName":{
+        "ET-Client-Name":"NTNU-IT_OYA_UTVIKLING"
+    },
+    "baseUrl": "https://api.entur.io/journey-planner/v3/graphql",
+    "busStops": [
+        "studentersamfundet"
+    ],
+    "maxResultsToGet":50,
+    "maxResultsToView":12,
+    "busFilter": {
+        "mode" :"include",
+        "values": []
+    }
+}

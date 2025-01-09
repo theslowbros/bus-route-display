@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avganger</title>
+    <style>
+        /* Overall background */
+        body {
+            background-color: #121212;
+            color: white; /* Ensure text is visible on dark background */
+            font-family: Arial, sans-serif; /* Use a clean, modern font */
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Tables container styling */
+        #busStopsContainer {
+            display: flex; /* Use Flexbox for layout */
+            flex-wrap: wrap; /* Allow wrapping to the next row */
+            justify-content: space-around; /* Distribute tables evenly */
+            align-content: flex-start;
+            align-items: flex-start;
+        }
+
+        /* Table styling */
+        table {
+            border-collapse: separate; /* Enable spacing between borders */
+            background-color: #1E1E1E; /* Dark grey table background */
+            border-spacing: 0; /* Remove default table spacing */
+            border-radius: .5em; /* Rounded corners for the entire table */
+            overflow: hidden; /* Clip overflow for rounded corners */
+            color: white;
+        }
+
+
+        /* Header row styling */
+        th {
+            background-color: #2A2A2A; /* Slightly lighter dark grey for the header */
+            color: white; /* White text for visibility */
+            padding: 10px;
+            font-size: 1.2em; /* Slightly larger font for headers */
+        }
+
+        /* Table rows */
+        td {
+            padding: 10px; /* Add padding inside cells */
+            height: 30px; /* Fixed height for rows */
+            border-top: 1px solid #3C3C3C; /* Dark grey top border */
+            border-bottom: 1px solid #3C3C3C; /* Dark grey bottom border */
+        }
+
+        /* Special styling for the row with Bus Line */
+        #busLine {
+            background-color: #75daad; /* Highlighted background */
+            border-radius: .5em; /* Rounded corners for this row */
+            color: black; /* Black text for contrast */
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <header style="display: flex; justify-content: space-between; align-items: center; padding: 10px;">
+        <div style="display: flex;justify-content: flex-start;align-items: center;flex-direction: row;gap:10px;">
+            <img height="75" src="https://www.ntnu.edu/documents/13276125/1272238926/ntnu.png/1f92d593-9a60-4bc5-80d2-2a427d1094bd?t=1481020252638">
+            <h1 onclick="toggleMotd()">Avganger fra øyakobb skørt</h1>
+        </div>
+        <!-- MOTD -->
+        <div id="motd">
+            <div style="display: flex; justify-content: space-between; align-items: center;flex-direction: column;">
+                <b>Dagens melding</b>
+                <h2 >Skssssøørt</h2>
+                
+            </div>
+        </div>
+        <h1 id="currentTime" style="padding: 20px;"></h1>
+    </header>
+        <div id="busStopsContainer" style="display: flex;">
+        
+    </div>
+    
+    <script>
+        function toggleMotd() {
+            var motd = document.getElementById("motd");
+            if (motd.hidden) {
+                motd.hidden = false;
+                return;
+            }
+            motd.hidden = true;
+            return;
+        }
+
+        function UpdateTimeTable() {
+            // Fetch timetable data from the Flask API
+            fetch('/api/timetable')
+                .then(response => response.json()) // Parse JSON data from the response
+                .then(data => {
+                    const container = document.querySelector('#busStopsContainer'); // Assuming a container div for bus stops
+                    container.innerHTML = ''; // Clear any existing tables
+                    data.sort((a, b) => a.stopName.localeCompare(b.stopName));
+
+                    data.forEach(busStop => {
+                        // Create a table for each bus stop
+                        const stopTable = document.createElement('table');
+                        stopTable.style.margin = "20px 0"; // Add some spacing between tables
+                        stopTable.style.padding = "20px 0"; // Add some spacing between tables
+                        stopTable.style.border = "1px solid black"; // Basic styling
+
+                        // Add a header row with the stop name
+                        const headerRow = document.createElement('tr');
+                        const headerCell = document.createElement('th');
+                        headerCell.colSpan = 3; // Span across all columns
+                        headerCell.textContent = busStop.stopName; // Use the stop name as the table header
+                        headerCell.style.textAlign = 'center';
+                        headerRow.appendChild(headerCell);
+                        stopTable.appendChild(headerRow);
+
+                        // Add a sub-header row for column names
+                        const subHeaderRow = document.createElement('tr');
+                        subHeaderRow.innerHTML = `
+                            <th>Linje</th>
+                            <th></th>
+                            <th>Ankomst</th>
+                        `;
+                        stopTable.appendChild(subHeaderRow);
+
+                        // Add rows for each bus in this bus stop
+                        busStop.BusEntries.forEach(bus => {
+                            const row = document.createElement('tr');
+                            let timeCellStyle = "";
+                            if (bus.hereIn.includes("Min") || bus.hereIn.includes("Nå")) {
+
+                                if (bus.hereIn.includes("Min")) {
+                                    const minutes = parseInt(bus.hereIn.split(" ")[0]); // Extract the numeric value
+                                    if (minutes < 5) {
+                                        timeCellStyle = "color: red; font-weight: bold;"; // Add custom style for less than 10 minutes
+                                    }
+                                }
+                                if (bus.hereIn.includes("Nå")) {
+                                    timeCellStyle = "color: red; font-weight: bold;"; // Add custom style for less than 10 minutes
+                                }
+                            }
+
+                            row.innerHTML = `
+                                <td id="busLine"><svg xmlns="http://www.w3.org/2000/svg" width="20" viewBox="0 0 576 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M288 0C422.4 0 512 35.2 512 80l0 16 0 32c17.7 0 32 14.3 32 32l0 64c0 17.7-14.3 32-32 32l0 160c0 17.7-14.3 32-32 32l0 32c0 17.7-14.3 32-32 32l-32 0c-17.7 0-32-14.3-32-32l0-32-192 0 0 32c0 17.7-14.3 32-32 32l-32 0c-17.7 0-32-14.3-32-32l0-32c-17.7 0-32-14.3-32-32l0-160c-17.7 0-32-14.3-32-32l0-64c0-17.7 14.3-32 32-32c0 0 0 0 0 0l0-32s0 0 0 0l0-16C64 35.2 153.6 0 288 0zM128 160l0 96c0 17.7 14.3 32 32 32l112 0 0-160-112 0c-17.7 0-32 14.3-32 32zM304 288l112 0c17.7 0 32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-112 0 0 160zM144 400a32 32 0 1 0 0-64 32 32 0 1 0 0 64zm288 0a32 32 0 1 0 0-64 32 32 0 1 0 0 64zM384 80c0-8.8-7.2-16-16-16L208 64c-8.8 0-16 7.2-16 16s7.2 16 16 16l160 0c8.8 0 16-7.2 16-16z"/></svg>  ${bus.line}</td>
+                                <td>${bus.destination}</td>
+                                <td style="${timeCellStyle}">${bus.hereIn}</td>
+                            `;
+                                
+                            stopTable.appendChild(row);
+                        });
+
+                        // Append the table to the container
+                        container.appendChild(stopTable);
+                    });
+                })
+                .catch(error => console.error('Error fetching timetable data:', error));            
+        }
+
+        // Set the function to run every xx seconds
+        setInterval(UpdateTimeTable, 10000);
+        
+        // Call it once immediately to load the timetable when the page loads
+        UpdateTimeTable();
+        
+        function updateTime() {
+            const currentTimeElement = document.getElementById('currentTime');
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            currentTimeElement.textContent = `${hours}:${minutes}:${seconds}`;
+        }
+
+        // Update the time every minute
+        setInterval(updateTime, 1000);
+        updateTime();  // Set the initial time when the page loads
+
+        
+
+    </script>
+</body>
+</html>
